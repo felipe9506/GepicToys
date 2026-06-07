@@ -30,7 +30,7 @@
                 {% endif %}
             </td>
             <td>{{ p.name }}</td>
-            <td>${{ "%.2f"|format(p.price) }}</td>
+            <td>{{ p.price|cop }}</td>
             <td>{{ p.stock }}</td>
             <td>
                 <span class="badge {{ 'badge-success' if p.active else 'badge-danger' }}">
@@ -38,7 +38,8 @@
                 </span>
             </td>
             <td>
-                <a href="{{ url_for('products.edit_product', product_id=p.id) }}" class="btn btn-sm">Editar</a>
+                <a href="{{ url_for('products.edit_product', product_id=p.id) }}"
+                   class="btn btn-sm">Editar</a>
                 {% if current_user.role == 'gerente' %}
                 <a href="{{ url_for('products.delete_product', product_id=p.id) }}"
                    class="btn btn-sm btn-danger"
