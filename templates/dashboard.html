@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Mi Dashboard{% endblock %}
+
+{% block content %}
+<h2>📊 Dashboard de {{ current_user.username }}</h2>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>💰 Total ganado</h3>
+        <p class="stat-number">${{ "%.2f"|format(total) }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>📦 Ventas hoy</h3>
+        <p class="stat-number">{{ ventas_hoy }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>📋 Total ventas</h3>
+        <p class="stat-number">{{ sales|length }}</p>
+    </div>
+</div>
+
+<div class="section">
+    <h3>Historial de ventas</h3>
+    {% if sales %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in sales %}
+            <tr>
+                <td>{{ item.order.date.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>{{ item.product.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>${{ "%.2f"|format(item.subtotal) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p class="empty-msg">Aún no tienes ventas registradas.</p>
+    {% endif %}
+</div>
+{% endblock %}

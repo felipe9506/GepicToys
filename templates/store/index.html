@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}GepicToys - Tienda Anime{% endblock %}
+
+{% block content %}
+
+<div class="hero">
+    <div class="hero-badge">🎌 NUEVOS ARRIVALS</div>
+    <div class="hero-title">
+        <div class="hero-robot">
+            <img src="{{ url_for('static', filename='saludo.png') }}"
+                 alt="GepicToys" class="hero-robot-img">
+        </div>
+        <h1>
+            <span class="welcome">Bienvenido a</span>
+            <span class="gepic">Gepic</span><span class="toys">Toys</span>
+        </h1>
+    </div>
+    <p>Los mejores muñecos anime de Colombia · Envío a todo el país</p>
+</div>
+
+<div class="section-title">Productos destacados</div>
+
+<div class="products-grid">
+    {% for p in products %}
+    <div class="product-card">
+        <div class="card-img-wrap">
+            {% if p.image_url %}
+                <img src="{{ p.image_url }}" alt="{{ p.name }}" class="product-img">
+            {% else %}
+                <div class="product-img-placeholder">🎌</div>
+            {% endif %}
+            <span class="card-stock-badge">Stock: {{ p.stock }}</span>
+        </div>
+        <div class="product-info">
+            <h3>{{ p.name }}</h3>
+            <p class="product-desc">{{ p.description or '' }}</p>
+            <div class="product-footer">
+                <div>
+                    <p class="product-price">${{ "%.2f"|format(p.price) }}</p>
+                </div>
+                <form method="POST"
+                      action="{{ url_for('store.add_to_cart', product_id=p.id) }}">
+                    <input type="hidden" name="quantity" value="1">
+                    <button type="submit" class="btn-add">+ Agregar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% else %}
+        <p class="empty-msg">No hay productos disponibles por el momento.</p>
+    {% endfor %}
+</div>
+
+{% endblock %}

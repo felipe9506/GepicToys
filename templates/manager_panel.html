@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}Panel Gerente{% endblock %}
+
+{% block content %}
+<h2>👔 Panel del Gerente</h2>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>💰 Ingresos totales</h3>
+        <p class="stat-number">${{ "%.2f"|format(total_global) }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>🏆 Más vendido</h3>
+        <p class="stat-number">{{ top_producto.name if top_producto else 'N/A' }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>📦 Total pedidos</h3>
+        <p class="stat-number">{{ orders|length }}</p>
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-header">
+        <h3>👥 Rendimiento por vendedor</h3>
+        <a href="{{ url_for('manager.crear_vendedor') }}" class="btn btn-primary">+ Nuevo vendedor</a>
+    </div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Vendedor</th>
+                <th>Nº ventas</th>
+                <th>Total generado</th>
+                <th>Ver detalle</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in resumen %}
+            <tr>
+                <td>{{ row.username }}</td>
+                <td>{{ row.num_ventas }}</td>
+                <td>${{ "%.2f"|format(row.total or 0) }}</td>
+                <td>
+                    {% set vendedor = row.username %}
+                    <a href="#" class="btn btn-sm">Ver</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="section">
+    <h3>🛒 Pedidos recientes</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Cliente</th>
+                <th>Email</th>
+                <th>Total</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>#{{ order.id }}</td>
+                <td>{{ order.customer_name }}</td>
+                <td>{{ order.customer_email }}</td>
+                <td>${{ "%.2f"|format(order.total) }}</td>
+                <td>
+                    <span class="badge
+                        {% if order.status == 'pagado' %}badge-success
+                        {% elif order.status == 'enviado' %}badge-info
+                        {% elif order.status == 'cancelado' %}badge-danger
+                        {% else %}badge-warning{% endif %}">
+                        {{ order.status }}
+                    </span>
+                </td>
+                <td>{{ order.date.strftime('%d/%m/%Y') }}</td>
+                <td>
+                    <form method="POST"
+                          action="{{ url_for('manager.cambiar_estado', order_id=order.id) }}"
+                          style="display:flex; gap:4px;">
+                        <select name="status" class="select-sm">
+                            <option value="pendiente">Pendiente</option>
+                            <option value="pagado">Pagado</option>
+                            <option value="enviado">Enviado</option>
+                            <option value="cancelado">Cancelado</option>
+                        </select>
+                        <button type="submit" class="btn btn-sm">✓</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

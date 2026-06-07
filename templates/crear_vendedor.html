@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Crear Vendedor{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h2>👤 Crear nuevo vendedor</h2>
+    <form method="POST">
+        <div class="form-group">
+            <label>Nombre de usuario</label>
+            <input type="text" name="username" required>
+        </div>
+        <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" name="password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Crear vendedor</button>
+        <a href="{{ url_for('manager.panel') }}" class="btn">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

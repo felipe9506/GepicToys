@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}GepicToys{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="{{ url_for('store.index') }}" class="navbar-brand">
+    <img src="{{ url_for('static', filename='Gepic_logo9.png') }}" alt="GepicToys" class="navbar-logo">
+    <span class="brand-name">
+        <span class="brand-gepic">Gepic</span><span class="brand-toys">Toys</span>
+    </span>
+</a>
+</a>
+    <div class="navbar-links">
+        <a href="{{ url_for('store.index') }}">Tienda</a>
+        <a href="{{ url_for('store.view_cart') }}">🛒 Carrito</a>
+        {% if current_user.is_authenticated %}
+            {% if current_user.role == 'gerente' %}
+                <a href="{{ url_for('manager.panel') }}">Panel Gerente</a>
+            {% else %}
+                <a href="{{ url_for('sales.dashboard') }}">Mi Dashboard</a>
+            {% endif %}
+            <a href="{{ url_for('products.list_products') }}">Productos</a>
+            <a href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
+        {% else %}
+            <a href="{{ url_for('auth.login') }}">Iniciar sesión</a>
+        {% endif %}
+    </div>
+</nav>
+
+<div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</div>
+
+</body>
+</html>

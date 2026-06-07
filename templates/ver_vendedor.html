@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Ventas de {{ vendedor.username }}{% endblock %}
+
+{% block content %}
+<h2>📋 Ventas de {{ vendedor.username }}</h2>
+<p class="total-highlight">Total generado: <strong>${{ "%.2f"|format(total) }}</strong></p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Pedido #</th>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Precio unit.</th>
+            <th>Subtotal</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td>#{{ item.order_id }}</td>
+            <td>{{ item.product.name }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>${{ "%.2f"|format(item.unit_price) }}</td>
+            <td>${{ "%.2f"|format(item.subtotal) }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{{ url_for('manager.panel') }}" class="btn">← Volver al panel</a>
+{% endblock %}
