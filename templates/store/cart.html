@@ -2,7 +2,7 @@
 {% block title %}Mi Carrito{% endblock %}
 
 {% block content %}
-<h2>🛒 Tu carrito.</h2>
+<h2>🛒 Tu carrito</h2>
 
 {% if cart %}
 <table class="table">
@@ -24,15 +24,16 @@
                 {% endif %}
                 {{ item.name }}
             </td>
-            <td>${{ "%.2f"|format(item.price) }}</td>
+            <td>{{ item.price|cop }}</td>
             <td>
-                <form method="POST" action="{{ url_for('store.update_cart', product_id=pid) }}">
+                <form method="POST"
+                      action="{{ url_for('store.update_cart', product_id=pid) }}">
                     <input type="number" name="quantity" value="{{ item.quantity }}"
                            min="0" max="99" class="quantity-input">
                     <button type="submit" class="btn btn-sm">↺</button>
                 </form>
             </td>
-            <td>${{ "%.2f"|format(item.price * item.quantity) }}</td>
+            <td>{{ (item.price * item.quantity)|cop }}</td>
             <td>
                 <a href="{{ url_for('store.remove_from_cart', product_id=pid) }}"
                    class="btn btn-sm btn-danger">✕</a>
@@ -43,7 +44,7 @@
 </table>
 
 <div class="cart-summary">
-    <h3>Total: <span class="total-price">${{ "%.2f"|format(total) }}</span></h3>
+    <h3>Total: <span class="total-price">{{ total|cop }}</span></h3>
     <a href="{{ url_for('store.checkout') }}" class="btn btn-primary btn-lg">
         💳 Proceder al pago
     </a>

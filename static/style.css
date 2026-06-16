@@ -413,3 +413,41 @@ body {
 /* ── Misc ── */
 .empty-msg { color: var(--text-muted); padding: 20px 0; }
 .select-sm { padding: 4px 8px; background: #fff; border: 1.5px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.82rem; }
+/* ── Métodos de pago ── */
+.payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.payment-option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #fff;
+}
+.payment-option:hover {
+    border-color: var(--primary);
+    background: var(--accent);
+}
+.payment-option.active {
+    border-color: var(--primary);
+    background: var(--accent);
+}
+.payment-option input[type="radio"] { display: none; }
+.payment-icon { font-size: 1.8rem; }
+.payment-option div strong { display: block; font-size: 0.95rem; }
+.payment-option div small  { color: var(--text-muted); font-size: 0.82rem; }
+.contra-info {
+    background: var(--accent);
+    border: 1.5px solid var(--primary);
+    border-radius: var(--radius);
+    padding: 16px;
+    line-height: 2;
+}
+.contra-info p { font-size: 0.95rem; color: var(--text); }

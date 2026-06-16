@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_login import LoginManager
+from flask_migrate import Migrate
 from dotenv import load_dotenv
 from models import db, User
 from werkzeug.security import generate_password_hash
@@ -18,6 +19,7 @@ def create_app():
     app.config['STRIPE_WEBHOOK_SECRET']          = os.getenv('STRIPE_WEBHOOK_SECRET')
 
     db.init_app(app)
+    Migrate(app, db)
 
     login_manager = LoginManager()
     login_manager.init_app(app)

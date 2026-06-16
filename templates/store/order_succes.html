@@ -1,26 +1,43 @@
 {% extends 'base.html' %}
-{% block title %}¡Compra exitosa!{% endblock %}
+{% block title %}¡Pedido confirmado!{% endblock %}
 
 {% block content %}
 <div class="success-container">
-    <div class="success-icon">🎉</div>
-    <h2>¡Gracias por tu compra, {{ order.customer_name }}!</h2>
-    <p>Tu pedido <strong>#{{ order.id }}</strong> fue registrado exitosamente.</p>
-    <p>Enviamos la confirmación a <strong>{{ order.customer_email }}</strong></p>
+    <div class="success-icon">
+        {% if order.payment_method == 'contra_entrega' %}🚚{% else %}🎉{% endif %}
+    </div>
+
+    <h2>¡Gracias, {{ order.customer_name }}!</h2>
+
+    {% if order.payment_method == 'contra_entrega' %}
+        <p>Tu pedido <strong>#{{ order.id }}</strong> fue registrado.</p>
+        <p>Lo recibirás en tu dirección y pagarás
+            <strong>{{ order.total|cop }}</strong> al momento de la entrega.</p>
+    {% else %}
+        <p>Tu pedido <strong>#{{ order.id }}</strong> fue pagado exitosamente.</p>
+        <p>Enviamos la confirmación a <strong>{{ order.customer_email }}</strong></p>
+    {% endif %}
 
     <div class="order-detail">
         <h3>Detalle del pedido</h3>
         {% for item in order.items %}
         <div class="summary-item">
             <span>{{ item.product.name }} x{{ item.quantity }}</span>
-            <span>${{ "%.2f"|format(item.subtotal) }}</span>
+            <span>{{ item.subtotal|cop }}</span>
         </div>
         {% endfor %}
         <div class="summary-total">
-            <strong>Total pagado: ${{ "%.2f"|format(order.total) }}</strong>
+            <strong>Total: {{ order.total|cop }}</strong>
+        </div>
+        <div style="margin-top:12px; font-size:0.9rem; color:#666;">
+            <strong>Método de pago:</strong>
+            {{ '💳 Tarjeta' if order.payment_method == 'stripe' else '🚚 Contra entrega' }}
         </div>
     </div>
 
-    <a href="{{ url_for('store.index') }}" class="btn btn-primary">← Seguir comprando</a>
+    <a href="{{ url_for('store.index') }}" class="btn btn-primary"
+       style="margin-top:20px;">
+        ← Seguir comprando
+    </a>
 </div>
 {% endblock %}

@@ -21,8 +21,9 @@ def gerente_required(f):
 @login_required
 @gerente_required
 def panel():
-    # Resumen de ventas por vendedor
+    # Resumen de ventas por vendedor incluyendo el id
     resumen = (db.session.query(
+        User.id,
         User.username,
         func.count(OrderItem.id).label('num_ventas'),
         func.sum(OrderItem.subtotal).label('total')
@@ -44,7 +45,7 @@ def panel():
      .order_by(func.sum(OrderItem.quantity).desc())
      .first())
 
-    # Todos los pedidos
+    # Todos los pedidos ordenados por fecha
     orders = Order.query.order_by(Order.date.desc()).all()
 
     return render_template('manager_panel.html',

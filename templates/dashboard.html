@@ -7,7 +7,7 @@
 <div class="stats-grid">
     <div class="stat-card">
         <h3>💰 Total ganado</h3>
-        <p class="stat-number">${{ "%.2f"|format(total) }}</p>
+        <p class="stat-number">{{ total|cop }}</p>
     </div>
     <div class="stat-card">
         <h3>📦 Ventas hoy</h3>
@@ -37,7 +37,7 @@
                 <td>{{ item.order.date.strftime('%d/%m/%Y %H:%M') }}</td>
                 <td>{{ item.product.name }}</td>
                 <td>{{ item.quantity }}</td>
-                <td>${{ "%.2f"|format(item.subtotal) }}</td>
+                <td>{{ item.subtotal|cop }}</td>
             </tr>
             {% endfor %}
         </tbody>

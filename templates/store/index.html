@@ -7,7 +7,7 @@
     <div class="hero-badge">🎌 NUEVOS ARRIVALS</div>
     <div class="hero-title">
         <div class="hero-robot">
-            <img src="{{ url_for('static', filename='saludo.png') }}"
+            <img src="{{ url_for('static', filename='Gepic_logo9.jpg') }}"
                  alt="GepicToys" class="hero-robot-img">
         </div>
         <h1>
@@ -35,9 +35,7 @@
             <h3>{{ p.name }}</h3>
             <p class="product-desc">{{ p.description or '' }}</p>
             <div class="product-footer">
-                <div>
-                    <p class="product-price">${{ "%.2f"|format(p.price) }}</p>
-                </div>
+                <p class="product-price">{{ p.price|cop }}</p>
                 <form method="POST"
                       action="{{ url_for('store.add_to_cart', product_id=p.id) }}">
                     <input type="hidden" name="quantity" value="1">

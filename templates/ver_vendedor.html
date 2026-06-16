@@ -3,7 +3,9 @@
 
 {% block content %}
 <h2>📋 Ventas de {{ vendedor.username }}</h2>
-<p class="total-highlight">Total generado: <strong>${{ "%.2f"|format(total) }}</strong></p>
+<p class="total-highlight">
+    Total generado: <strong>{{ total|cop }}</strong>
+</p>
 
 <table class="table">
     <thead>
@@ -21,8 +23,8 @@
             <td>#{{ item.order_id }}</td>
             <td>{{ item.product.name }}</td>
             <td>{{ item.quantity }}</td>
-            <td>${{ "%.2f"|format(item.unit_price) }}</td>
-            <td>${{ "%.2f"|format(item.subtotal) }}</td>
+            <td>{{ item.unit_price|cop }}</td>
+            <td>{{ item.subtotal|cop }}</td>
         </tr>
         {% endfor %}
     </tbody>

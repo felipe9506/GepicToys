@@ -7,7 +7,7 @@
 <div class="stats-grid">
     <div class="stat-card">
         <h3>💰 Ingresos totales</h3>
-        <p class="stat-number">${{ "%.2f"|format(total_global) }}</p>
+        <p class="stat-number">{{ total_global|cop }}</p>
     </div>
     <div class="stat-card">
         <h3>🏆 Más vendido</h3>
@@ -22,7 +22,9 @@
 <div class="section">
     <div class="section-header">
         <h3>👥 Rendimiento por vendedor</h3>
-        <a href="{{ url_for('manager.crear_vendedor') }}" class="btn btn-primary">+ Nuevo vendedor</a>
+        <a href="{{ url_for('manager.crear_vendedor') }}" class="btn btn-primary">
+            + Nuevo vendedor
+        </a>
     </div>
     <table class="table">
         <thead>
@@ -38,10 +40,10 @@
             <tr>
                 <td>{{ row.username }}</td>
                 <td>{{ row.num_ventas }}</td>
-                <td>${{ "%.2f"|format(row.total or 0) }}</td>
+                <td>{{ (row.total or 0)|cop }}</td>
                 <td>
-                    {% set vendedor = row.username %}
-                    <a href="#" class="btn btn-sm">Ver</a>
+                    <a href="{{ url_for('manager.ver_vendedor', user_id=row.id) }}"
+                       class="btn btn-sm">Ver</a>
                 </td>
             </tr>
             {% endfor %}
@@ -51,6 +53,7 @@
 
 <div class="section">
     <h3>🛒 Pedidos recientes</h3>
+    {% if orders %}
     <table class="table">
         <thead>
             <tr>
@@ -69,7 +72,7 @@
                 <td>#{{ order.id }}</td>
                 <td>{{ order.customer_name }}</td>
                 <td>{{ order.customer_email }}</td>
-                <td>${{ "%.2f"|format(order.total) }}</td>
+                <td>{{ order.total|cop }}</td>
                 <td>
                     <span class="badge
                         {% if order.status == 'pagado' %}badge-success
@@ -85,10 +88,22 @@
                           action="{{ url_for('manager.cambiar_estado', order_id=order.id) }}"
                           style="display:flex; gap:4px;">
                         <select name="status" class="select-sm">
-                            <option value="pendiente">Pendiente</option>
-                            <option value="pagado">Pagado</option>
-                            <option value="enviado">Enviado</option>
-                            <option value="cancelado">Cancelado</option>
+                            <option value="pendiente"
+                                {{ 'selected' if order.status == 'pendiente' }}>
+                                Pendiente
+                            </option>
+                            <option value="pagado"
+                                {{ 'selected' if order.status == 'pagado' }}>
+                                Pagado
+                            </option>
+                            <option value="enviado"
+                                {{ 'selected' if order.status == 'enviado' }}>
+                                Enviado
+                            </option>
+                            <option value="cancelado"
+                                {{ 'selected' if order.status == 'cancelado' }}>
+                                Cancelado
+                            </option>
                         </select>
                         <button type="submit" class="btn btn-sm">✓</button>
                     </form>
@@ -97,5 +112,8 @@
             {% endfor %}
         </tbody>
     </table>
+    {% else %}
+        <p class="empty-msg">No hay pedidos aún.</p>
+    {% endif %}
 </div>
 {% endblock %}
