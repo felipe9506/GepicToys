@@ -1,10 +1,24 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, jsonify
 from flask_login import login_required, current_user
 from models import OrderItem, Order, db
 from sqlalchemy import func
 from datetime import date
 
 sales_bp = Blueprint('sales', __name__, url_prefix='/sales')
+
+@sales_bp.route('/ultimo-pedido')
+@login_required
+def ultimo_pedido():
+    """Devuelve el último pedido para las alertas en tiempo real."""
+    ultimo = Order.query.order_by(Order.date.desc()).first()
+    if ultimo:
+        return jsonify({
+            'order_id': ultimo.id,
+            'customer': ultimo.customer_name,
+            'total':    ultimo.total,
+            'method':   ultimo.payment_method
+        })
+    return jsonify({'order_id': None})
 
 @sales_bp.route('/dashboard')
 @login_required

@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_login import LoginManager
 from flask_migrate import Migrate
+from flask_mail import Mail
 from dotenv import load_dotenv
 from models import db, User
 from werkzeug.security import generate_password_hash
@@ -8,18 +9,30 @@ import os
 
 load_dotenv()
 
+# Instancia global de Mail para usar en otros módulos
+mail = Mail()
+
 def create_app():
     app = Flask(__name__)
 
     app.config['SECRET_KEY']                     = os.getenv('SECRET_KEY', 'dev-secret')
-    app.config['SQLALCHEMY_DATABASE_URI']        = os.getenv('DATABASE_URL', 'sqlite:///gepictoys.db')
+    app.config['SQLALCHEMY_DATABASE_URI']        = os.getenv('DATABASE_URL', 'sqlite:///gepictoys.db').replace('postgres://', 'postgresql://')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['STRIPE_PUBLIC_KEY']              = os.getenv('STRIPE_PUBLIC_KEY')
     app.config['STRIPE_SECRET_KEY']              = os.getenv('STRIPE_SECRET_KEY')
     app.config['STRIPE_WEBHOOK_SECRET']          = os.getenv('STRIPE_WEBHOOK_SECRET')
 
+    # ── Flask-Mail ─────────────────────────────────────────────
+    app.config['MAIL_SERVER']         = 'smtp.gmail.com'
+    app.config['MAIL_PORT']           = 587
+    app.config['MAIL_USE_TLS']        = True
+    app.config['MAIL_USERNAME']       = os.getenv('MAIL_USERNAME')
+    app.config['MAIL_PASSWORD']       = os.getenv('MAIL_PASSWORD')
+    app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
+
     db.init_app(app)
     Migrate(app, db)
+    mail.init_app(app)
 
     login_manager = LoginManager()
     login_manager.init_app(app)
@@ -30,13 +43,10 @@ def create_app():
     def load_user(user_id):
         return User.query.get(int(user_id))
 
-    # ── Filtro para precios en pesos colombianos ───────────────
     @app.template_filter('cop')
     def formato_cop(valor):
-        # Ejemplo: 89900 → "$ 89.900 COP"
         return f"$ {valor:,.0f} COP"
 
-    # ── Blueprints ─────────────────────────────────────────────
     from auth     import auth_bp
     from products import products_bp
     from sales    import sales_bp
