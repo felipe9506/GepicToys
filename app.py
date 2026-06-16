@@ -9,18 +9,49 @@ import os
 
 load_dotenv()
 
-# Instancia global de Mail para usar en otros módulos
 mail = Mail()
 
 def create_app():
     app = Flask(__name__)
 
-    app.config['SECRET_KEY']                     = os.getenv('SECRET_KEY', 'dev-secret')
-    app.config['SQLALCHEMY_DATABASE_URI']        = os.getenv('DATABASE_URL', 'sqlite:///gepictoys.db').replace('postgres://', 'postgresql://')
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret')
+
+    # ── Base de datos ──────────────────────────────────────────
+    database_url = os.getenv('DATABASE_URL', 'sqlite:///gepictoys.db')
+    if database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+
+    app.config['SQLALCHEMY_DATABASE_URI']        = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['STRIPE_PUBLIC_KEY']              = os.getenv('STRIPE_PUBLIC_KEY')
-    app.config['STRIPE_SECRET_KEY']              = os.getenv('STRIPE_SECRET_KEY')
-    app.config['STRIPE_WEBHOOK_SECRET']          = os.getenv('STRIPE_WEBHOOK_SECRET')
+
+    # ── Opciones de conexión para Supabase ─────────────────────
+    # pool_pre_ping verifica la conexión antes de usarla
+    # pool_recycle reconecta cada 5 minutos para evitar cortes SSL
+    if 'supabase' in database_url:
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+            'pool_pre_ping':  True,
+            'pool_recycle':   300,
+            'pool_size':      5,
+            'max_overflow':   2,
+            'connect_args': {
+                'sslmode':         'require',
+                'connect_timeout': 10,
+                'keepalives':      1,
+                'keepalives_idle': 30,
+                'keepalives_interval': 10,
+                'keepalives_count': 5,
+            }
+        }
+    else:
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+            'pool_pre_ping': True,
+            'pool_recycle':  300,
+        }
+
+    # ── Stripe ─────────────────────────────────────────────────
+    app.config['STRIPE_PUBLIC_KEY']   = os.getenv('STRIPE_PUBLIC_KEY')
+    app.config['STRIPE_SECRET_KEY']   = os.getenv('STRIPE_SECRET_KEY')
+    app.config['STRIPE_WEBHOOK_SECRET'] = os.getenv('STRIPE_WEBHOOK_SECRET')
 
     # ── Flask-Mail ─────────────────────────────────────────────
     app.config['MAIL_SERVER']         = 'smtp.gmail.com'
