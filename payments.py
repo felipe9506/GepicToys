@@ -1,19 +1,20 @@
 from flask import (Blueprint, request, jsonify,
                    render_template, session, current_app)
-from flask_mail import Message
 from models import db, Order, OrderItem, Product
 import stripe
+import os
 
 payments_bp = Blueprint('payments', __name__, url_prefix='/payments')
 
 def enviar_correo_confirmacion(order):
     """
-    Envía correo HTML de confirmación al cliente.
-    El import de mail se hace dentro para evitar imports circulares.
+    Envía correo de confirmación usando SendGrid.
+    Funciona en Render gratuito (no bloquea SMTP como Gmail).
     """
-    from app import mail
+    from sendgrid import SendGridAPIClient
+    from sendgrid.helpers.mail import Mail as SGMail
 
-    # Construir filas de la tabla de productos
+    # Construir filas de productos del pedido
     items_html = ""
     for item in order.items:
         items_html += f"""
@@ -21,10 +22,12 @@ def enviar_correo_confirmacion(order):
             <td style="padding:10px 8px;border-bottom:1px solid #e0f0e0;">
                 {item.product.name}
             </td>
-            <td style="padding:10px 8px;border-bottom:1px solid #e0f0e0;text-align:center;">
+            <td style="padding:10px 8px;border-bottom:1px solid #e0f0e0;
+                       text-align:center;">
                 {item.quantity}
             </td>
-            <td style="padding:10px 8px;border-bottom:1px solid #e0f0e0;text-align:right;">
+            <td style="padding:10px 8px;border-bottom:1px solid #e0f0e0;
+                       text-align:right;">
                 $ {item.subtotal:,.0f} COP
             </td>
         </tr>
@@ -36,13 +39,14 @@ def enviar_correo_confirmacion(order):
     html = f"""
     <!DOCTYPE html>
     <html>
-    <body style="margin:0;padding:20px;background:#f5f5f5;font-family:'Segoe UI',sans-serif;">
+    <body style="margin:0;padding:20px;background:#f5f5f5;
+                 font-family:'Segoe UI',sans-serif;">
 
     <div style="max-width:600px;margin:0 auto;background:#ffffff;
                 border-radius:12px;overflow:hidden;
                 border:1px solid #e0f0e0;">
 
-        <!-- Header verde -->
+        <!-- Header -->
         <div style="background:#39ff14;padding:28px;text-align:center;">
             <h1 style="margin:0;color:#1a1a1a;font-size:1.8rem;font-weight:900;">
                 🎌 GepicToys
@@ -59,10 +63,11 @@ def enviar_correo_confirmacion(order):
             </p>
             <p style="color:#555;line-height:1.6;">
                 Tu pedido <strong>#{order.id}</strong> fue registrado exitosamente.
-                Llegará a tu dirección en <strong>máximo 5 días hábiles</strong>. 🚀
+                Llegará a tu dirección en
+                <strong>máximo 5 días hábiles</strong>. 🚀
             </p>
 
-            <!-- Detalle del pedido -->
+            <!-- Detalle -->
             <h3 style="color:#1a7a00;border-bottom:2px solid #39ff14;
                         padding-bottom:8px;margin-top:24px;">
                 📦 Detalle del pedido
@@ -71,11 +76,17 @@ def enviar_correo_confirmacion(order):
                 <thead>
                     <tr style="background:#f0fff0;">
                         <th style="padding:10px 8px;text-align:left;
-                                   color:#1a7a00;font-size:0.9rem;">Producto</th>
+                                   color:#1a7a00;font-size:0.9rem;">
+                            Producto
+                        </th>
                         <th style="padding:10px 8px;text-align:center;
-                                   color:#1a7a00;font-size:0.9rem;">Cant.</th>
+                                   color:#1a7a00;font-size:0.9rem;">
+                            Cant.
+                        </th>
                         <th style="padding:10px 8px;text-align:right;
-                                   color:#1a7a00;font-size:0.9rem;">Subtotal</th>
+                                   color:#1a7a00;font-size:0.9rem;">
+                            Subtotal
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
@@ -91,22 +102,24 @@ def enviar_correo_confirmacion(order):
                 </span>
             </div>
 
-            <!-- Info de entrega -->
+            <!-- Info entrega -->
             <div style="background:#fff8e1;border-left:4px solid #f39c12;
-                        padding:14px 16px;margin-top:20px;border-radius:0 8px 8px 0;">
+                        padding:14px 16px;margin-top:20px;
+                        border-radius:0 8px 8px 0;">
                 <p style="margin:0;color:#555;line-height:1.8;font-size:0.92rem;">
-                    📍 <strong>Dirección:</strong> {order.customer_address}<br>
-                    📞 <strong>Teléfono:</strong> {order.customer_phone or 'No proporcionado'}<br>
+                    📍 <strong>Dirección:</strong>
+                        {order.customer_address}<br>
+                    📞 <strong>Teléfono:</strong>
+                        {order.customer_phone or 'No proporcionado'}<br>
                     💳 <strong>Método de pago:</strong> {metodo}<br>
                     📋 <strong>Estado:</strong> {estado}<br>
                     📅 <strong>Entrega estimada:</strong> máximo 5 días hábiles
                 </p>
             </div>
 
-            <!-- Mensaje final -->
             <p style="color:#555;margin-top:20px;font-size:0.92rem;line-height:1.6;">
-                Si tienes alguna pregunta sobre tu pedido, responde este correo
-                o contáctanos directamente. ¡Gracias por comprar en GepicToys! 🎌
+                Si tienes alguna pregunta sobre tu pedido contáctanos.
+                ¡Gracias por comprar en GepicToys! 🎌
             </p>
         </div>
 
@@ -114,8 +127,7 @@ def enviar_correo_confirmacion(order):
         <div style="background:#f0fff0;padding:16px;text-align:center;
                     border-top:1px solid #e0f0e0;">
             <p style="margin:0;color:#888;font-size:0.82rem;">
-                GepicToys · Los mejores muñecos anime de Colombia<br>
-                📧 {current_app.config['MAIL_USERNAME']}
+                GepicToys · Los mejores muñecos anime de Colombia
             </p>
         </div>
 
@@ -124,21 +136,26 @@ def enviar_correo_confirmacion(order):
     </html>
     """
 
-    msg = Message(
-        subject  = f"✅ Pedido #{order.id} confirmado - GepicToys",
-        recipients = [order.customer_email],
-        html     = html
-    )
-
     try:
-        mail.send(msg)
-        print(f"✅ Correo enviado a {order.customer_email}")
+        sg = SendGridAPIClient(os.getenv('SENDGRID_API_KEY'))
+        message = SGMail(
+            from_email   = os.getenv('MAIL_USERNAME'),
+            to_emails    = order.customer_email,
+            subject      = f"✅ Pedido #{order.id} confirmado - GepicToys",
+            html_content = html
+        )
+        response = sg.send(message)
+        print(f"✅ Correo enviado a {order.customer_email} "
+              f"- Status: {response.status_code}")
     except Exception as e:
         print(f"❌ Error enviando correo: {e}")
 
 @payments_bp.route('/create-payment-intent', methods=['POST'])
 def create_payment_intent():
-    """Crea un PaymentIntent en Stripe para procesar el pago."""
+    """
+    Crea un PaymentIntent en Stripe.
+    El frontend necesita el clientSecret para mostrar el formulario de tarjeta.
+    """
     stripe.api_key = current_app.config['STRIPE_SECRET_KEY']
     data = request.get_json()
     cart = session.get('cart', {})
@@ -146,6 +163,7 @@ def create_payment_intent():
     if not cart:
         return jsonify({'error': 'Carrito vacío'}), 400
 
+    # Stripe trabaja en centavos
     total_cents = int(sum(
         item['price'] * item['quantity'] for item in cart.values()
     ) * 100)
@@ -174,6 +192,7 @@ def confirm_order():
     if not cart:
         return jsonify({'error': 'Carrito vacío'}), 400
 
+    # Estado según método de pago
     estado = 'pagado' if method == 'stripe' else 'pendiente'
 
     order = Order(
@@ -191,6 +210,7 @@ def confirm_order():
     db.session.add(order)
     db.session.flush()
 
+    # Crear items y descontar stock
     for pid, item in cart.items():
         product = Product.query.get(int(pid))
         if product:
@@ -209,15 +229,21 @@ def confirm_order():
     # Limpiar carrito
     session.pop('cart', None)
 
-    # Enviar correo de confirmación
-    print(f"📧 Enviando correo a {order.customer_email}...")
-    enviar_correo_confirmacion(order)
+    # Enviar correo — no bloquea el pedido si falla
+    try:
+        print(f"📧 Enviando correo a {order.customer_email}...")
+        enviar_correo_confirmacion(order)
+    except Exception as e:
+        print(f"❌ Error de correo: {e}")
 
     return jsonify({'success': True, 'orderId': order.id})
 
 @payments_bp.route('/webhook', methods=['POST'])
 def webhook():
-    """Stripe llama aquí cuando cambia el estado de un pago."""
+    """
+    Stripe llama aquí cuando cambia el estado de un pago.
+    Verifica la firma para evitar fraudes.
+    """
     stripe.api_key = current_app.config['STRIPE_SECRET_KEY']
     payload    = request.data
     sig_header = request.headers.get('Stripe-Signature')
