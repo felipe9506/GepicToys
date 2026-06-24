@@ -2,7 +2,7 @@
 {% block title %}{{ 'Editar' if product else 'Agregar' }} Producto{% endblock %}
 
 {% block content %}
-<div class="auth-container" style="max-width: 560px;">
+<div class="auth-container" style="max-width:580px;">
     <h2>{{ '✏️ Editar' if product else '➕ Agregar' }} Producto</h2>
 
     <form method="POST" enctype="multipart/form-data">
@@ -21,8 +21,8 @@
 
         <div class="form-row">
             <div class="form-group">
-                <label>Precio (USD)</label>
-                <input type="number" name="price" step="0.01" min="0"
+                <label>Precio (COP)</label>
+                <input type="number" name="price" step="any" min="0"
                        value="{{ product.price if product else '' }}" required>
             </div>
             <div class="form-group">
@@ -32,29 +32,90 @@
             </div>
         </div>
 
-        <!-- Imagen actual si estamos editando -->
-        {% if product and product.image_url %}
         <div class="form-group">
-            <label>Imagen actual</label>
-            <div class="image-preview">
-                <img src="{{ product.image_url }}" alt="Imagen actual">
+            <label>Categoría</label>
+            <select name="categoria">
+                {% for valor, etiqueta in categorias %}
+                <option value="{{ valor }}"
+                    {{ 'selected' if product and product.categoria == valor else '' }}>
+                    {{ etiqueta }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Imagen principal -->
+        <div class="form-group">
+            <label>🖼️ Imagen principal</label>
+            {% if product and product.image_url %}
+            <img src="{{ product.image_url }}"
+                 style="width:100%;max-height:150px;object-fit:contain;
+                        border-radius:8px;margin-bottom:8px;">
+            {% endif %}
+            <div class="upload-area"
+                 onclick="document.getElementById('img1').click()">
+                <input type="file" name="imagen" id="img1"
+                       accept="image/*" style="display:none"
+                       onchange="previewImg(this,'prev1','ph1')">
+                <div id="ph1" style="text-align:center;padding:12px;">
+                    <span style="font-size:2rem;">📁</span>
+                    <p style="font-size:0.88rem;color:#888;margin:4px 0 0;">
+                        Clic para seleccionar
+                    </p>
+                </div>
+                <img id="prev1"
+                     style="display:none;width:100%;max-height:150px;
+                            object-fit:contain;border-radius:8px;">
             </div>
         </div>
-        {% endif %}
 
-        <!-- Subida desde escritorio -->
+        <!-- Imagen 2 -->
         <div class="form-group">
-            <label>🖼️ Imagen del producto</label>
-            <div class="upload-area" onclick="document.getElementById('imagen-input').click()">
-                <input type="file" name="imagen" id="imagen-input"
-                       accept="image/*" style="display:none;">
-                <div id="upload-placeholder">
-                    <span style="font-size:2.5rem;">📁</span>
-                    <p>Haz clic para seleccionar una imagen</p>
-                    <small>PNG, JPG, WEBP — máx. 5MB</small>
+            <label>🖼️ Imagen 2 (opcional)</label>
+            {% if product and product.image_url2 %}
+            <img src="{{ product.image_url2 }}"
+                 style="width:100%;max-height:150px;object-fit:contain;
+                        border-radius:8px;margin-bottom:8px;">
+            {% endif %}
+            <div class="upload-area"
+                 onclick="document.getElementById('img2').click()">
+                <input type="file" name="imagen2" id="img2"
+                       accept="image/*" style="display:none"
+                       onchange="previewImg(this,'prev2','ph2')">
+                <div id="ph2" style="text-align:center;padding:12px;">
+                    <span style="font-size:2rem;">📁</span>
+                    <p style="font-size:0.88rem;color:#888;margin:4px 0 0;">
+                        Clic para seleccionar
+                    </p>
                 </div>
-                <img id="imagen-preview" style="display:none; width:100%;
-                     max-height:220px; object-fit:contain; border-radius:8px;">
+                <img id="prev2"
+                     style="display:none;width:100%;max-height:150px;
+                            object-fit:contain;border-radius:8px;">
+            </div>
+        </div>
+
+        <!-- Imagen 3 -->
+        <div class="form-group">
+            <label>🖼️ Imagen 3 (opcional)</label>
+            {% if product and product.image_url3 %}
+            <img src="{{ product.image_url3 }}"
+                 style="width:100%;max-height:150px;object-fit:contain;
+                        border-radius:8px;margin-bottom:8px;">
+            {% endif %}
+            <div class="upload-area"
+                 onclick="document.getElementById('img3').click()">
+                <input type="file" name="imagen3" id="img3"
+                       accept="image/*" style="display:none"
+                       onchange="previewImg(this,'prev3','ph3')">
+                <div id="ph3" style="text-align:center;padding:12px;">
+                    <span style="font-size:2rem;">📁</span>
+                    <p style="font-size:0.88rem;color:#888;margin:4px 0 0;">
+                        Clic para seleccionar
+                    </p>
+                </div>
+                <img id="prev3"
+                     style="display:none;width:100%;max-height:150px;
+                            object-fit:contain;border-radius:8px;">
             </div>
         </div>
 
@@ -63,7 +124,7 @@
             <label>
                 <input type="checkbox" name="active"
                        {{ 'checked' if product.active else '' }}>
-                Producto activo (visible en tienda)
+                Activo (visible en tienda)
             </label>
         </div>
         {% endif %}
@@ -72,26 +133,28 @@
             <button type="submit" class="btn btn-primary">
                 {{ '💾 Guardar cambios' if product else '➕ Agregar producto' }}
             </button>
-            <a href="{{ url_for('products.list_products') }}" class="btn">Cancelar</a>
+            <a href="{{ url_for('products.list_products') }}" class="btn">
+                Cancelar
+            </a>
         </div>
 
     </form>
 </div>
 
 <script>
-    document.getElementById('imagen-input').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const preview = document.getElementById('imagen-preview');
-                const placeholder = document.getElementById('upload-placeholder');
-                preview.src = e.target.result;
-                preview.style.display = 'block';
-                placeholder.style.display = 'none';
-            };
-            reader.readAsDataURL(file);
-        }
-    });
+function previewImg(input, previewId, placeholderId) {
+    const file = input.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview         = document.getElementById(previewId);
+            const placeholder     = document.getElementById(placeholderId);
+            preview.src           = e.target.result;
+            preview.style.display = 'block';
+            placeholder.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+}
 </script>
 {% endblock %}

@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- Favicon - ícono de la pestaña -->
+    <link rel="icon" type="image/png"
+          href="{{ url_for('static', filename='gepic_logo.png') }}?v=3">
+    <link rel="shortcut icon" type="image/png"
+          href="{{ url_for('static', filename='gepic_logo.png') }}?v=3">
+    <link rel="apple-touch-icon"
+          href="{{ url_for('static', filename='gepic_logo.png') }}?v=3">
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}GepicToys{% endblock %}</title>
@@ -9,16 +17,19 @@
 <body>
 
 <nav class="navbar">
-  <a href="{{ url_for('store.index') }}" class="navbar-brand">
-    <img src="{{ url_for('static', filename='Gepic_logo9.png') }}" alt="GepicToys" class="navbar-logo">
-    <span class="brand-name">
-        <span class="brand-gepic">Gepic</span><span class="brand-toys">Toys</span>
-    </span>
-</a>
-</a>
+    <a href="{{ url_for('store.index') }}" class="navbar-brand">
+        <img src="{{ url_for('static', filename='gepic_logo.png') }}"
+             alt="GepicToys" class="navbar-logo">
+        <span class="brand-name">
+            <span class="brand-gepic">Gepic</span><span class="brand-toys">Toys</span>
+        </span>
+    </a>
+
     <div class="navbar-links">
         <a href="{{ url_for('store.index') }}">Tienda</a>
-        <a href="{{ url_for('store.view_cart') }}">🛒 Carrito</a>
+        <a href="{{ url_for('store.view_cart') }}" class="cart-link">
+            🛒 Carrito
+        </a>
         {% if current_user.is_authenticated %}
             {% if current_user.role == 'gerente' %}
                 <a href="{{ url_for('manager.panel') }}">Panel Gerente</a>
@@ -44,19 +55,25 @@
 
     {% block content %}{% endblock %}
 </div>
+
 <!-- Sistema de alertas en tiempo real -->
 {% if current_user.is_authenticated %}
 <div id="alerta-pedido" style="display:none; position:fixed; bottom:24px; right:24px;
-     background:#fff; border:2px solid #39ff14; border-radius:12px; padding:16px 20px;
-     box-shadow:0 4px 20px rgba(57,255,20,0.3); z-index:9999; max-width:320px;
-     animation: slideIn 0.3s ease;">
-    <div style="display:flex; justify-content:space-between; align-items:start; gap:12px;">
+     background:#fff; border:2px solid #39ff14; border-radius:12px;
+     padding:16px 20px; box-shadow:0 4px 20px rgba(57,255,20,0.3);
+     z-index:9999; max-width:320px; animation: slideIn 0.3s ease;">
+    <div style="display:flex; justify-content:space-between;
+                align-items:start; gap:12px;">
         <div>
-            <p style="margin:0; font-weight:700; color:#1a7a00;">🛒 ¡Nuevo pedido!</p>
-            <p id="alerta-texto" style="margin:4px 0 0; font-size:0.88rem; color:#555;"></p>
+            <p style="margin:0; font-weight:700; color:#1a7a00;">
+                🛒 ¡Nuevo pedido!
+            </p>
+            <p id="alerta-texto"
+               style="margin:4px 0 0; font-size:0.88rem; color:#555;"></p>
         </div>
         <button onclick="cerrarAlerta()"
-                style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#888;">✕</button>
+                style="background:none; border:none; font-size:1.2rem;
+                       cursor:pointer; color:#888;">✕</button>
     </div>
 </div>
 
@@ -68,14 +85,12 @@
 </style>
 
 <script>
-    // Verificar nuevos pedidos cada 15 segundos
     let ultimoPedidoVisto = localStorage.getItem('ultimoPedido') || 0;
 
     async function verificarNuevosPedidos() {
         try {
             const res  = await fetch('/sales/ultimo-pedido');
             const data = await res.json();
-
             if (data.order_id && data.order_id > ultimoPedidoVisto) {
                 ultimoPedidoVisto = data.order_id;
                 localStorage.setItem('ultimoPedido', data.order_id);
@@ -88,8 +103,6 @@
         document.getElementById('alerta-texto').textContent =
             `Pedido #${data.order_id} · ${data.customer} · $ ${Number(data.total).toLocaleString('es-CO')} COP`;
         document.getElementById('alerta-pedido').style.display = 'block';
-
-        // Auto cerrar después de 8 segundos
         setTimeout(cerrarAlerta, 8000);
     }
 
@@ -97,9 +110,9 @@
         document.getElementById('alerta-pedido').style.display = 'none';
     }
 
-    // Verificar cada 15 segundos
     setInterval(verificarNuevosPedidos, 15000);
 </script>
 {% endif %}
+
 </body>
 </html>

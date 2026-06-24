@@ -15,29 +15,86 @@
             <span class="gepic">Gepic</span><span class="toys">Toys</span>
         </h1>
     </div>
-    <p>Los mejores muñecos anime de Colombia · Envío a todo el país</p>
+    <p>Los mejores productos anime de Colombia · Envío a todo el país</p>
 </div>
 
-<div class="section-title">Productos destacados</div>
+<!-- Filtros de categoría -->
+<div class="filtros">
+    <button class="filtro-btn active" onclick="filtrar('todos', this)">
+        🌟 Todos
+    </button>
+    <button class="filtro-btn" onclick="filtrar('juguetes', this)">
+        🧸 Juguetes
+    </button>
+    <button class="filtro-btn" onclick="filtrar('billeteras', this)">
+        👜 Billeteras
+    </button>
+    <button class="filtro-btn" onclick="filtrar('camisas', this)">
+        👕 Camisas
+    </button>
+    <button class="filtro-btn" onclick="filtrar('bufandas', this)">
+        🧣 Bufandas
+    </button>
+    <button class="filtro-btn" onclick="filtrar('accesorios', this)">
+        ✨ Accesorios
+    </button>
+</div>
 
-<div class="products-grid">
+<!-- Grid de productos -->
+<div class="products-grid" id="productos-grid">
     {% for p in products %}
-    <div class="product-card">
-        <div class="card-img-wrap">
-            {% if p.image_url %}
-                <img src="{{ p.image_url }}" alt="{{ p.name }}" class="product-img">
+    <div class="product-card" data-categoria="{{ p.categoria or 'juguetes' }}">
+
+        <!-- Carrusel de imágenes -->
+        <div class="carrusel" id="carrusel-{{ p.id }}">
+            {% set imagenes = [p.image_url, p.image_url2, p.image_url3]
+               | select | list %}
+
+            {% if imagenes %}
+                {% for img in imagenes %}
+                <div class="carrusel-slide
+                     {{ 'active' if loop.first else '' }}">
+                    <img src="{{ img }}" alt="{{ p.name }}"
+                         class="product-img">
+                </div>
+                {% endfor %}
+
+                {% if imagenes|length > 1 %}
+                <!-- Controles del carrusel -->
+                <button class="carrusel-btn prev"
+                        onclick="moverCarrusel('{{ p.id }}', -1)">‹</button>
+                <button class="carrusel-btn next"
+                        onclick="moverCarrusel('{{ p.id }}', 1)">›</button>
+
+                <!-- Indicadores -->
+                <div class="carrusel-dots">
+                    {% for img in imagenes %}
+                    <span class="dot {{ 'active' if loop.first else '' }}"
+                          onclick="irSlide('{{ p.id }}', {{ loop.index0 }})">
+                    </span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
             {% else %}
-                <div class="product-img-placeholder">🎌</div>
+                <div class="carrusel-slide active">
+                    <div class="product-img-placeholder">🎌</div>
+                </div>
             {% endif %}
+
             <span class="card-stock-badge">Stock: {{ p.stock }}</span>
         </div>
+
+        <!-- Info del producto -->
         <div class="product-info">
+            <span class="categoria-tag">{{ p.categoria or 'juguetes' }}</span>
             <h3>{{ p.name }}</h3>
             <p class="product-desc">{{ p.description or '' }}</p>
             <div class="product-footer">
                 <p class="product-price">{{ p.price|cop }}</p>
                 <form method="POST"
-                      action="{{ url_for('store.add_to_cart', product_id=p.id) }}">
+                      action="{{ url_for('store.add_to_cart',
+                                        product_id=p.id) }}">
                     <input type="hidden" name="quantity" value="1">
                     <button type="submit" class="btn-add">+ Agregar</button>
                 </form>
@@ -45,8 +102,60 @@
         </div>
     </div>
     {% else %}
-        <p class="empty-msg">No hay productos disponibles por el momento.</p>
+        <p class="empty-msg">No hay productos disponibles.</p>
     {% endfor %}
 </div>
 
+<script>
+// ── Carrusel ──────────────────────────────────────────────────
+const estadoCarrusel = {};
+
+function moverCarrusel(id, direccion) {
+    const carrusel = document.getElementById('carrusel-' + id);
+    const slides   = carrusel.querySelectorAll('.carrusel-slide');
+    const dots     = carrusel.querySelectorAll('.dot');
+
+    if (!estadoCarrusel[id]) estadoCarrusel[id] = 0;
+
+    slides[estadoCarrusel[id]].classList.remove('active');
+    dots[estadoCarrusel[id]]?.classList.remove('active');
+
+    estadoCarrusel[id] = (estadoCarrusel[id] + direccion + slides.length)
+                          % slides.length;
+
+    slides[estadoCarrusel[id]].classList.add('active');
+    dots[estadoCarrusel[id]]?.classList.add('active');
+}
+
+function irSlide(id, index) {
+    const carrusel = document.getElementById('carrusel-' + id);
+    const slides   = carrusel.querySelectorAll('.carrusel-slide');
+    const dots     = carrusel.querySelectorAll('.dot');
+
+    if (!estadoCarrusel[id]) estadoCarrusel[id] = 0;
+
+    slides[estadoCarrusel[id]].classList.remove('active');
+    dots[estadoCarrusel[id]]?.classList.remove('active');
+
+    estadoCarrusel[id] = index;
+
+    slides[index].classList.add('active');
+    dots[index]?.classList.add('active');
+}
+
+// ── Filtros ───────────────────────────────────────────────────
+function filtrar(categoria, btn) {
+    // Actualizar botones
+    document.querySelectorAll('.filtro-btn').forEach(b =>
+        b.classList.remove('active'));
+    btn.classList.add('active');
+
+    // Mostrar/ocultar productos
+    document.querySelectorAll('.product-card').forEach(card => {
+        const cat = card.dataset.categoria;
+        card.style.display = (categoria === 'todos' || cat === categoria)
+                              ? 'block' : 'none';
+    });
+}
+</script>
 {% endblock %}
