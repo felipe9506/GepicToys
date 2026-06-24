@@ -8,13 +8,14 @@ payments_bp = Blueprint('payments', __name__, url_prefix='/payments')
 
 def enviar_correo_confirmacion(order):
     """
-    Envía correo de confirmación usando SendGrid.
-    Funciona en Render gratuito (no bloquea SMTP como Gmail).
+    Envía correo de confirmación usando Resend.
+    Funciona en Render gratuito sin bloqueos SMTP.
     """
-    from sendgrid import SendGridAPIClient
-    from sendgrid.helpers.mail import Mail as SGMail
+    import resend
 
-    # Construir filas de productos del pedido
+    resend.api_key = os.getenv('RESEND_API_KEY')
+
+    # Construir filas de productos
     items_html = ""
     for item in order.items:
         items_html += f"""
@@ -67,7 +68,7 @@ def enviar_correo_confirmacion(order):
                 <strong>máximo 5 días hábiles</strong>. 🚀
             </p>
 
-            <!-- Detalle -->
+            <!-- Detalle del pedido -->
             <h3 style="color:#1a7a00;border-bottom:2px solid #39ff14;
                         padding-bottom:8px;margin-top:24px;">
                 📦 Detalle del pedido
@@ -137,16 +138,14 @@ def enviar_correo_confirmacion(order):
     """
 
     try:
-        sg = SendGridAPIClient(os.getenv('SENDGRID_API_KEY'))
-        message = SGMail(
-            from_email   = os.getenv('MAIL_USERNAME'),
-            to_emails    = order.customer_email,
-            subject      = f"✅ Pedido #{order.id} confirmado - GepicToys",
-            html_content = html
-        )
-        response = sg.send(message)
-        print(f"✅ Correo enviado a {order.customer_email} "
-              f"- Status: {response.status_code}")
+        params = {
+            "from":    "GepicToys <onboarding@resend.dev>",
+            "to":      [order.customer_email],
+            "subject": f"✅ Pedido #{order.id} confirmado - GepicToys",
+            "html":    html,
+        }
+        email = resend.Emails.send(params)
+        print(f"✅ Correo enviado - ID: {email['id']}")
     except Exception as e:
         print(f"❌ Error enviando correo: {e}")
 
